@@ -51,12 +51,11 @@ public class ProductServiceImplementare implements ProductService {
     @Override
     public void deteleProduct(Long product_id) {
         productRepository.findById(product_id).orElseThrow(()-> new Exception("sdv"));
-        try {
+        if(cartRepository.existsByProduct_Id(product_id))
             cartRepository.deleteAllByProduct_Id(product_id);
+        if(wishListRepo.existsByProduct_Id(product_id))
             wishListRepo.deleteAllByProduct_Id(product_id);
-        }catch (Exception e){
 
-        }
         productRepository.deleteById(product_id);
     }
 

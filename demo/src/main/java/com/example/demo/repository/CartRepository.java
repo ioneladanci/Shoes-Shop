@@ -22,4 +22,6 @@ public interface CartRepository extends CrudRepository<Cart,Long> {
     List<Cart> findAllByUserAndProduct(User user,Product product);
 
     void deleteAllByProduct_Id(Long id);
+
+    Boolean existsByProduct_Id(Long id);
 }

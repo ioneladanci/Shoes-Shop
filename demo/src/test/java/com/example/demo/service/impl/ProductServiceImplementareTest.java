@@ -31,7 +31,7 @@ import static org.mockito.Mockito.when;
 import static org.skyscreamer.jsonassert.JSONAssert.assertEquals;
 
 
-class ProductServiceImplementareTest {
+class ProductServiceImplementareTest  {
 
     private ProductServiceImplementare underTest;
     private AutoCloseable autoCloseable;

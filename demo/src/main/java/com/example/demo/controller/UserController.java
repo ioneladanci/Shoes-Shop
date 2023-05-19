@@ -3,15 +3,23 @@ import com.example.demo.Dto.UserDto;
 import com.example.demo.Dto.UserResponse;
 import com.example.demo.enums.UserType;
 import com.example.demo.model.User;
+import com.example.demo.repository.UserRepository;
 import com.example.demo.service.impl.EmailServiceImplementare;
 import com.example.demo.service.impl.UserServiceImplementare;
+import com.example.demo.service.impl.XmlFileService;
 import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/user")
@@ -19,6 +27,16 @@ import java.util.List;
 public class UserController {
     @Autowired
     private UserServiceImplementare userService;
+
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private XmlFileService xmlFileService;
+    @Autowired
+    PasswordEncoder encoder;
+
+
+
 
     @Autowired
     private EmailServiceImplementare emailServiceImplementare;
@@ -60,6 +78,27 @@ public class UserController {
         return ResponseEntity.ok().body(userService.register(user));
     }
 
+    /*@PutMapping("/register")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<?> register(@Valid @RequestBody UserDto userdto) {
+
+        if (userRepository.existsByEmail(userdto.getEmail())) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(new MessageResponse("Error: Email is already in use!"));
+        }
+
+        // Create new user's account
+        userdto.setPassword(encoder.encode(userdto.getPassword()));
+        User user = new User(userdto.getEmail(),
+                encoder.encode(userdto.getPassword()), UserType.BUYER);
+
+        userService.register(user);
+
+        return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
+
+    }*/
+
     @PutMapping("/login")
     @ResponseStatus(HttpStatus.OK)
     public UserResponse loginBuyer(@Valid @RequestBody UserDto userDto) {
@@ -73,6 +112,51 @@ public class UserController {
         User user=new User(userdto,UserType.ADMIN);
         return new UserResponse(userService.loginAdmin(user));
     }
+   /*@PutMapping("/login")
+   @ResponseStatus(HttpStatus.OK)
+   public ResponseEntity<?> loginBuyer(@Valid @RequestBody UserDto userDto) {
+       Authentication authentication = authenticationManager.authenticate(
+               new UsernamePasswordAuthenticationToken(userDto.getEmail(), userDto.getPassword()));
+
+       SecurityContextHolder.getContext().setAuthentication(authentication);
+       String jwt = jwtUtils.generateJwtToken(authentication);
+
+       UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+       List<String> roles = userDetails.getAuthorities().stream()
+               .map(item -> item.getAuthority())
+               .collect(Collectors.toList());
+       User user=new User(userDto,UserType.BUYER);
+       userService.loginBuyer(user);
+       return ResponseEntity.ok(new JwtResponse(jwt,
+               userDetails.getUserId(),
+               userDetails.getUsername(),
+               userDetails.getUsername(),
+               roles));
+   }
+
+    @PutMapping("/loginAdmin")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<?> loginAdmin(@Valid @RequestBody UserDto userdto) {
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(userdto.getEmail(), userdto.getPassword()));
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        String jwt = jwtUtils.generateJwtToken(authentication);
+
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        List<String> roles = userDetails.getAuthorities().stream()
+                .map(item -> item.getAuthority())
+                .collect(Collectors.toList());
+        User user=new User(userdto,UserType.ADMIN);
+        userService.loginBuyer(user);
+
+        return ResponseEntity.ok(new JwtResponse(jwt,
+                userDetails.getUserId(),
+                userDetails.getUsername(),
+                userDetails.getUsername(),
+                roles));
+   }*/
+
 
     @PutMapping("/logout")
     @ResponseStatus(HttpStatus.OK)
@@ -98,5 +182,10 @@ public class UserController {
         emailServiceImplementare.sendMailWithAttachment(email,
                 "Your password is:" + userService.forgotPassword(email),
                 "Password requested");
+    }
+
+    @GetMapping("/report")
+    public String wishlistReport(@RequestParam String reportType,@RequestParam String email) {
+        return xmlFileService.CreateXMLFile(email,reportType);
     }
 }

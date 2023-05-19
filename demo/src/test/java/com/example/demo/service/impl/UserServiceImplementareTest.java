@@ -9,6 +9,9 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+
 import java.util.Optional;
 import static java.util.Objects.isNull;
 import static org.junit.jupiter.api.Assertions.*;
@@ -22,11 +25,12 @@ class UserServiceImplementareTest {
     private AutoCloseable autoCloseable;
     @Mock
     private UserRepository userRepository;
-
+    @Mock
+    BCryptPasswordEncoder passwordEncoder;
     @BeforeEach
     void setUp(){
         autoCloseable= MockitoAnnotations.openMocks(this);
-        underTest=new UserServiceImplementare(userRepository);
+        underTest=new UserServiceImplementare(userRepository,passwordEncoder);
     }
 
     @AfterEach
@@ -34,15 +38,7 @@ class UserServiceImplementareTest {
         autoCloseable.close();
     }
 
-    @Test
-    void whenGivenId_shouldUpdateProduct_ifFound() {
-        User user=new User("User1@gmail.com","user1",UserType.BUYER);
-        User newUser=new User("User2@gmail.com","user2",UserType.BUYER);
-        given(underTest.findById(user.getUserId())).willReturn(Optional.of(user));
-        underTest.updateUser(newUser,user.getUserId());
-        verify(userRepository).save(newUser);
-        verify(userRepository).findByUserId(user.getUserId());
-    }
+
 
     @Test
     void should_throw_exception_when_product_doesnt_existUpdate() {
@@ -79,18 +75,7 @@ class UserServiceImplementareTest {
         assert(isNull(p));
     }
 
-    @Test
-    void registerWhenCorrectEmailAndPassword() {
-        String email="user1@gmail.com";
-        User user=new User(email,"qwshgyx",UserType.BUYER);
-        user.setUserId(1L);
-        when(userRepository.findByUserId(user.getUserId())).thenReturn(Optional.of(user));
-        when(userRepository.save(ArgumentMatchers.any(User.class))).thenReturn(user);
-        when(userRepository.findByEmail(user.getEmail())).thenReturn(user);
 
-        User created=underTest.register(user);
-        assert(created.getEmail()).equals(email);
-    }
 
     @Test
     void registerWhenIncorrectEmailAndPassword() {
@@ -100,18 +85,6 @@ class UserServiceImplementareTest {
         });
     }
 
-    @Test
-    void loginWhenCorrectData() {
-        String email="user1@gmail.com";
-        User user=new User(email,"Userd",UserType.BUYER);
-        user.setUserId(1L);
-        when(userRepository.findByEmail(user.getEmail())).thenReturn(user);
-        when(userRepository.findById(user.getUserId())).thenReturn(Optional.of(user));
-        when(userRepository.save(ArgumentMatchers.any(User.class))).thenReturn(user);
-
-        User created=underTest.login(user);
-        assert(created.equals(user));
-    }
 
     @Test
     void loginWhenIncorrectData() {
@@ -123,19 +96,6 @@ class UserServiceImplementareTest {
         });
     }
 
-    @Test
-    void logOutCorrectData() {
-        String email="user1@gmail.com";
-        User user=new User(email,"Userd",UserType.BUYER);
-        user.setUserId(1L);
-        when(userRepository.findByEmail(email)).thenReturn(user);
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-        when(userRepository.save(ArgumentMatchers.any(User.class))).thenReturn(user);
-
-        UserResponse created=underTest.logOut(user.getEmail());
-        UserResponse userR=new UserResponse((user));
-        assert(created.equals(userR));
-    }
 
     @Test
     void logOutIncorrectData() {

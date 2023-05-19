@@ -26,4 +26,6 @@ public interface WishListRepo extends CrudRepository<WishList,Long> {
     WishList findAllByUserAndProduct(User user, Product product);
 
     void deleteAllByProduct_Id(Long id);
+
+    Boolean existsByProduct_Id(Long id);
 }

@@ -7,6 +7,8 @@ import com.example.demo.repository.UserRepository;
 import com.example.demo.service.UserService;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -17,11 +19,17 @@ public class UserServiceImplementare implements UserService {
 
     private final UserRepository userRepo;
 
+    @Autowired
+    BCryptPasswordEncoder passwordEncoder;
+
     @SneakyThrows
     @Override
     public void updateUser(User user, Long id){
         userRepo.findByUserId(id).orElseThrow(()->new Exception("Id not found"));
         user.setUserId(id);
+        String encodedPassword = passwordEncoder.encode(user.getPassword());
+        user.setPassword(encodedPassword);
+        userRepo.save(user);
         userRepo.save(user);
     }
 
@@ -50,11 +58,13 @@ public class UserServiceImplementare implements UserService {
     @SneakyThrows
     @Override
     public User register(User user1) {
-        User user=new User(user1.getEmail(),user1.getPassword(),UserType.BUYER);
+         User user=new User(user1.getEmail(),user1.getPassword(),UserType.BUYER);
+        String encodedPassword = passwordEncoder.encode(user.getPassword());
         if(user1.getEmail().length()<5 || user1.getPassword().length()<5){
 
             throw new Exception("Invalid Register");
         }
+        user.setPassword(encodedPassword);
         userRepo.save(user);
         System.out.println(user.getUserId());
         this.setLogedVar(user.getUserId(), true);
@@ -63,11 +73,14 @@ public class UserServiceImplementare implements UserService {
 
     @SneakyThrows
     public User login(User user) {
+
         User user1 = userRepo.findByEmail(user.getEmail());
         if(!Objects.nonNull(user1)){
             throw new Exception("Invalid email");
         }
-        if(!user1.getPassword().equals(user.getPassword()) || !user1.getRole().equals(user.getRole())){
+        String encodedPassword = passwordEncoder.encode(user.getPassword());
+
+        if(!passwordEncoder.matches(user.getPassword(), encodedPassword) || !user1.getRole().equals(user.getRole())){
 
             throw new Exception("Invalid password/role");
         }
